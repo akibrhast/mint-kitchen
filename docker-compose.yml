@@ -12,6 +12,12 @@ services:
       - SQUARE_ACCESS_TOKEN_PRODUCTION=${SQUARE_ACCESS_TOKEN_PRODUCTION}
       - SQUARE_ENVIRONMENT=${SQUARE_ENVIRONMENT:-sandbox}
       - SQUARE_LOCATION_ID=${SQUARE_LOCATION_ID}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: always
     networks:
       - mint-kitchen-network
@@ -27,7 +33,8 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: always
     networks:
       - mint-kitchen-network
