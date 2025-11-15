@@ -23,6 +23,7 @@ services:
       args:
         - VITE_SQUARE_APPLICATION_ID=${VITE_SQUARE_APPLICATION_ID}
         - VITE_SQUARE_LOCATION_ID=${VITE_SQUARE_LOCATION_ID}
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL}
     ports:
       - "8080:80"
     depends_on:

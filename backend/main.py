@@ -26,12 +26,13 @@ app.add_middleware(
         "http://localhost:5174",  # Vite alternative port
         "http://localhost:3000",  # Alternative React dev server
         "http://localhost:4173",  # Vite preview server
+        "https://mintkichen.akibrhast.synology.me",  # Production domain
+        "http://mintkichen.akibrhast.synology.me",   # Production domain (http)
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Initialize Square client
 SQUARE_ACCESS_TOKEN_SANDBOX = os.getenv("SQUARE_ACCESS_TOKEN_SANDBOX")
 SQUARE_ACCESS_TOKEN_PRODUCTION = os.getenv("SQUARE_ACCESS_TOKEN_PRODUCTION")
