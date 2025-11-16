@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardMedia,
@@ -9,13 +9,37 @@ import {
   IconButton,
   Tooltip,
   TextField,
+  Skeleton,
 } from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import { useCart } from '../context/CartContext';
+import { preloadImage } from '../utils/imageCache';
 
 const MenuItem = ({ item }) => {
   const [quantity, setQuantity] = useState(1);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const { addToCart } = useCart();
+
+  // Lazy load image when component mounts or image URL changes
+  useEffect(() => {
+    if (!item.image) {
+      setImageError(true);
+      return;
+    }
+
+    setImageLoaded(false);
+    setImageError(false);
+
+    preloadImage(item.image)
+      .then(() => {
+        setImageLoaded(true);
+      })
+      .catch((error) => {
+        console.error('Error loading image:', error);
+        setImageError(true);
+      });
+  }, [item.image]);
 
   const handleQuantityChange = (e) => {
     // Allow empty string while user is typing
@@ -51,12 +75,27 @@ const MenuItem = ({ item }) => {
         height: '100%',
       }}
     >
-      <CardMedia
-        component="img"
-        image={item.image}
-        alt={item.name}
-        sx={{ height: 220, objectFit: 'cover', borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
-      />
+      {!imageLoaded && !imageError ? (
+        <Skeleton
+          variant="rectangular"
+          sx={{ height: 220, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}
+        />
+      ) : (
+        <CardMedia
+          component="img"
+          image={imageError ? 'https://via.placeholder.com/400x220/f5f5f5/9e9e9e?text=No+Image' : item.image}
+          alt={item.name}
+          loading="lazy"
+          sx={{
+            height: 220,
+            objectFit: 'cover',
+            borderTopLeftRadius: 12,
+            borderTopRightRadius: 12,
+            opacity: imageLoaded ? 1 : 0,
+            transition: 'opacity 0.3s ease-in-out'
+          }}
+        />
+      )}
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <Typography variant="h6" sx={{ mb: 1 }}>{item.name}</Typography>
         <Box

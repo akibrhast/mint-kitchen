@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -6,14 +6,17 @@ import {
   Tabs,
   Tab,
   Box,
+  CircularProgress,
 } from '@mui/material';
 import { fetchMenuData } from '../services/api';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
 import IntroSection from '../components/IntroSection';
-import MenuSection from '../components/MenuSection';
-import ContactWithOptions from '../components/ContactSection';
 import Divider from '@mui/material/Divider';
+
+// Lazy load non-critical components
+const MenuSection = lazy(() => import('../components/MenuSection'));
+const ContactWithOptions = lazy(() => import('../components/ContactSection'));
 
 export default function HomePage() {
   const [tabIndex, setTabIndex] = React.useState(0);
@@ -111,7 +114,16 @@ export default function HomePage() {
         )}
 
         {!loading && !error && menuData && (
-          <>
+          <Suspense
+            fallback={
+              <Box p={3} sx={{ bgcolor: '#fafafa', textAlign: 'center', py: 8 }}>
+                <CircularProgress sx={{ color: '#75d72c' }} />
+                <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+                  Loading menu items...
+                </Typography>
+              </Box>
+            }
+          >
             {tabIndex === 0 && (
               <Box p={3} sx={{ bgcolor: '#fafafa' }}>
                 {menuData.dosas && menuData.dosas.length > 0 ? (
@@ -145,13 +157,21 @@ export default function HomePage() {
                 )}
               </Box>
             )}
-          </>
+          </Suspense>
         )}
       </Box>
 
       {/* Contact Section */}
       <Divider />
-      <ContactWithOptions />
+      <Suspense
+        fallback={
+          <Box p={3} sx={{ textAlign: 'center', py: 4 }}>
+            <CircularProgress sx={{ color: '#75d72c' }} size={24} />
+          </Box>
+        }
+      >
+        <ContactWithOptions />
+      </Suspense>
     </Box>
   );
 }
