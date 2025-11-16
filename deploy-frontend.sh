@@ -96,9 +96,10 @@ if [ -f .env ]; then
 fi
 
 # Build with API URL
+# Note: VITE_ variables should be in your .env file
 VITE_API_BASE_URL="$API_URL" \
-VITE_SQUARE_APPLICATION_ID="${VITE_SQUARE_APPLICATION_ID:-sandbox-sq0idb-OZLG13VvEW6P-WwdhxHeyA}" \
-VITE_SQUARE_LOCATION_ID="${VITE_SQUARE_LOCATION_ID:-LXDA5KGYVPCD2}" \
+VITE_SQUARE_APPLICATION_ID="${VITE_SQUARE_APPLICATION_ID}" \
+VITE_SQUARE_LOCATION_ID="${VITE_SQUARE_LOCATION_ID}" \
 yarn build
 
 echo -e "${BLUE}☁️  Uploading to S3...${NC}"
