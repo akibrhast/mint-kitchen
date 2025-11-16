@@ -12,7 +12,8 @@ import Header from '../components/Header';
 import Hero from '../components/Hero';
 import IntroSection from '../components/IntroSection';
 import MenuSection from '../components/MenuSection';
-import ContactSection from '../components/ContactSection';
+import ContactWithOptions from '../components/ContactSection';
+import Divider from '@mui/material/Divider';
 
 export default function HomePage() {
   const [tabIndex, setTabIndex] = React.useState(0);
@@ -149,7 +150,8 @@ export default function HomePage() {
       </Box>
 
       {/* Contact Section */}
-      <ContactSection />
+      <Divider />
+      <ContactWithOptions />
     </Box>
   );
 }

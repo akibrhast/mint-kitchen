@@ -18,7 +18,16 @@ const MenuItem = ({ item }) => {
   const { addToCart } = useCart();
 
   const handleQuantityChange = (e) => {
+    // Allow empty string while user is typing
+    if (e.target.value === '') {
+      return;
+    }
+
     const value = parseInt(e.target.value);
+    if (isNaN(value)) {
+      return;
+    }
+
     if (value > 0 && value <= 99) {
       setQuantity(value);
     }
@@ -83,12 +92,20 @@ const MenuItem = ({ item }) => {
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <TextField
-            type="number"
+            type="text"
             value={quantity}
             onChange={handleQuantityChange}
+            onFocus={(e) => e.target.select()}
+            onContextMenu={(e) => e.preventDefault()}
+            onBlur={(e) => {
+              // Reset to 1 if field is empty on blur
+              if (e.target.value === '') {
+                setQuantity(1);
+              }
+            }}
             inputProps={{
-              min: 1,
-              max: 99,
+              inputMode: 'numeric',
+              pattern: '[0-9]*',
               style: { textAlign: 'center' }
             }}
             sx={{

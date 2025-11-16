@@ -16,29 +16,7 @@ const IntroSection = ({ usingSquareData }) => {
       <Typography variant="body2">Thursday: 5:00 p.m - 8:00 p.m</Typography>
       <Typography variant="body2">Friday (Dosa Night): 5:00 p.m – 8:00 p.m</Typography>
       <Typography variant="body2">Saturday: 12:00 p.m – 7:00 p.m</Typography>
-      {usingSquareData && (
-        <Typography variant="caption" sx={{ mt: 2, display: 'block', color: '#5fb824', fontWeight: 'bold' }}>
-          Menu powered by Square
-        </Typography>
-      )}
-      {/* <Button
-        variant="contained"
-        href="https://mint-kitchen.square.site"
-        target="_blank"
-        sx={{
-          mt: 2,
-          bgcolor: '#75d72c',
-          color: '#fff',
-          fontWeight: 'bold',
-          px: 4,
-          py: 1.5,
-          '&:hover': {
-            bgcolor: '#5fb824',
-          }
-        }}
-      >
-        Order Online
-      </Button> */}
+
     </Container>
   );
 };
