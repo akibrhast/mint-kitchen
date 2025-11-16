@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Mint Kitchen Frontend - S3 + CloudFront for React Static Site
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: S3 bucket name for hosting the static website
+    Default: mint-kitchen-frontend
+    AllowedPattern: ^[a-z0-9][a-z0-9-]*[a-z0-9]$
+    ConstraintDescription: Bucket name must be lowercase, alphanumeric with hyphens
+
+Resources:
+  # S3 Bucket for static website hosting
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html  # For React Router support
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - '*'
+            AllowedMethods:
+              - GET
+              - HEAD
+            AllowedHeaders:
+              - '*'
+            MaxAge: 3000
+
+  # Bucket Policy to allow CloudFront access
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${FrontendBucket.Arn}/*'
+
+  # CloudFront Origin Access Identity
+  CloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub 'OAI for ${BucketName}'
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: Mint Kitchen Frontend Distribution
+        Enabled: true
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        PriceClass: PriceClass_100  # Use only North America and Europe (cheapest)
+
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''  # Using public bucket access
+
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          MinTTL: 0
+          DefaultTTL: 86400  # 1 day
+          MaxTTL: 31536000   # 1 year
+
+        # Custom error responses for SPA routing
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 300
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 300
+
+Outputs:
+  BucketName:
+    Description: S3 Bucket Name
+    Value: !Ref FrontendBucket
+    Export:
+      Name: MintKitchenFrontendBucket
+
+  BucketWebsiteURL:
+    Description: S3 Website URL
+    Value: !GetAtt FrontendBucket.WebsiteURL
+
+  CloudFrontURL:
+    Description: CloudFront Distribution URL
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: MintKitchenFrontendURL
+
+  CloudFrontDistributionId:
+    Description: CloudFront Distribution ID
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: MintKitchenDistributionId

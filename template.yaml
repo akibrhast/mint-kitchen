@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Mint Kitchen Backend - Serverless API with Lambda + API Gateway
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.11
+    Environment:
+      Variables:
+        SQUARE_ENVIRONMENT: !Ref SquareEnvironment
+
+Parameters:
+  SquareEnvironment:
+    Type: String
+    Default: sandbox
+    AllowedValues:
+      - sandbox
+      - production
+    Description: Square API environment (sandbox or production)
+
+  SquareAccessTokenSandbox:
+    Type: String
+    NoEcho: true
+    Description: Square API Access Token for Sandbox
+    Default: ''
+
+  SquareAccessTokenProduction:
+    Type: String
+    NoEcho: true
+    Description: Square API Access Token for Production
+    Default: ''
+
+  SquareLocationId:
+    Type: String
+    Description: Square Location ID
+    Default: 'LXDA5KGYVPCD2'
+
+Resources:
+  # Lambda Function for the entire FastAPI application
+  MintKitchenApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: mint-kitchen-api
+      CodeUri: backend/
+      Handler: main.handler
+      Description: Mint Kitchen FastAPI backend running on Lambda
+      Environment:
+        Variables:
+          SQUARE_ACCESS_TOKEN_SANDBOX: !Ref SquareAccessTokenSandbox
+          SQUARE_ACCESS_TOKEN_PRODUCTION: !Ref SquareAccessTokenProduction
+          SQUARE_LOCATION_ID: !Ref SquareLocationId
+      Events:
+        # Health check
+        HealthCheck:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+            RestApiId: !Ref MintKitchenApi
+
+        # Menu endpoints
+        GetMenu:
+          Type: Api
+          Properties:
+            Path: /api/menu
+            Method: GET
+            RestApiId: !Ref MintKitchenApi
+
+        GetCategories:
+          Type: Api
+          Properties:
+            Path: /api/categories
+            Method: GET
+            RestApiId: !Ref MintKitchenApi
+
+        GetItem:
+          Type: Api
+          Properties:
+            Path: /api/items/{item_id}
+            Method: GET
+            RestApiId: !Ref MintKitchenApi
+
+        # Order endpoints
+        CreateOrder:
+          Type: Api
+          Properties:
+            Path: /api/orders/create
+            Method: POST
+            RestApiId: !Ref MintKitchenApi
+
+        CreatePayment:
+          Type: Api
+          Properties:
+            Path: /api/payments/create
+            Method: POST
+            RestApiId: !Ref MintKitchenApi
+
+        # Catch-all for CORS preflight
+        OptionsProxy:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: OPTIONS
+            RestApiId: !Ref MintKitchenApi
+
+  # API Gateway
+  MintKitchenApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: mint-kitchen-api
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+        MaxAge: "'600'"
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${MintKitchenApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Export:
+      Name: MintKitchenApiUrl
+
+  FunctionArn:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt MintKitchenApiFunction.Arn
+
+  FunctionName:
+    Description: "Lambda Function Name"
+    Value: !Ref MintKitchenApiFunction

@@ -19,17 +19,25 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Mint Kitchen API", version="1.0.0")
 
 # Configure CORS for React frontend
+# For AWS deployment, we allow all origins since API Gateway handles CORS
+# For local/Synology, we use specific origins
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else [
+    "http://localhost:5173",  # Vite default dev server
+    "http://localhost:5174",  # Vite alternative port
+    "http://localhost:3000",  # Alternative React dev server
+    "http://localhost:4173",  # Vite preview server
+    "https://mintkichen.akibrhast.synology.me",  # Production domain (Synology)
+    "http://mintkichen.akibrhast.synology.me",   # Production domain (http)
+]
+
+# If running in Lambda (AWS), allow all origins (API Gateway manages CORS)
+if os.getenv("AWS_EXECUTION_ENV"):
+    CORS_ORIGINS = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite default dev server
-        "http://localhost:5174",  # Vite alternative port
-        "http://localhost:3000",  # Alternative React dev server
-        "http://localhost:4173",  # Vite preview server
-        "https://mintkichen.akibrhast.synology.me",  # Production domain
-        "http://mintkichen.akibrhast.synology.me",   # Production domain (http)
-    ],
-    allow_credentials=True,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=False if "*" in CORS_ORIGINS else True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -438,6 +446,14 @@ async def create_payment(request: CreatePaymentRequest):
             detail=f"Error creating payment: {str(e)}"
         )
 
+
+# Lambda handler (for AWS deployment)
+try:
+    from mangum import Mangum
+    handler = Mangum(app, lifespan="off")
+except ImportError:
+    # Mangum not installed (local development)
+    pass
 
 if __name__ == "__main__":
     import uvicorn

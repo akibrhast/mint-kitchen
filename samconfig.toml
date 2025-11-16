@@ -1,0 +1,20 @@
+version = 0.1
+
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "mint-kitchen-backend"
+s3_prefix = "mint-kitchen-backend"
+region = "us-east-1"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "SquareEnvironment=sandbox",
+    "SquareAccessTokenSandbox=REPLACE_WITH_YOUR_SANDBOX_TOKEN",
+    "SquareAccessTokenProduction=REPLACE_WITH_YOUR_PRODUCTION_TOKEN",
+    "SquareLocationId=LXDA5KGYVPCD2"
+]
+
+[default.build]
+[default.build.parameters]
+use_container = false
